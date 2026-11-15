@@ -1,44 +1,78 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#4f46e5">
-  <title>Allen Class 8 · DPP Daily Practice</title>
-  <style>
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#f5f6fa;color:#1d2433;font:16px system-ui,-apple-system,"Segoe UI",sans-serif}
-    main{width:min(560px,100%);padding:30px;border:1px solid #e4e7ec;border-radius:18px;background:white;box-shadow:0 12px 40px #1d243310}
-    h1{margin:0 0 8px;font-size:24px}p{color:#667085;line-height:1.55}.track{height:8px;border-radius:99px;background:#eef0f4;overflow:hidden;margin:22px 0}.track span{display:block;width:35%;height:100%;background:#4f46e5;animation:load 1.2s ease-in-out infinite alternate}@keyframes load{to{width:85%}}
-    .error{color:#b42318;background:#fef3f2;border-radius:10px;padding:12px;display:none}a{color:#4f46e5}
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090d18"><title>Allen Class 8 · DPP Daily Practice</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#090d18;color:#edf2ff;font:16px system-ui,-apple-system,"Segoe UI",sans-serif}
+main{width:min(560px,100%);padding:30px;border:1px solid #273449;border-radius:18px;background:#111827;box-shadow:0 12px 40px #0005}
+h1{margin:0 0 8px;font-size:24px}p{color:#9aa8bf;line-height:1.55}.track{height:8px;border-radius:99px;background:#263449;overflow:hidden;margin:22px 0}.track span{display:block;width:35%;height:100%;background:#818cf8;animation:load 1.2s ease-in-out infinite alternate}@keyframes load{to{width:85%}}
+.error{color:#fda4af;background:#3a202b;border-radius:10px;padding:12px;display:none}
+</style>
 </head>
 <body>
-<main>
-  <h1>Allen Class 8 · DPP Daily Practice</h1>
-  <p id="status">Loading your daily practice app…</p>
-  <div class="track" id="track"><span></span></div>
-  <p class="error" id="error"></p>
-  <noscript>This practice app requires JavaScript. Enable JavaScript and reload this page.</noscript>
-</main>
+<main><h1>Allen Class 8 · DPP Daily Practice</h1><p id="status">Loading your daily practice app…</p><div class="track" id="track"><span></span></div><p class="error" id="error"></p><noscript>Enable JavaScript to use the practice app.</noscript></main>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 (async()=>{
-  const status=document.getElementById('status'), track=document.getElementById('track'), error=document.getElementById('error');
-  try{
-    if(!window.JSZip) throw new Error('The ZIP reader could not load. Check your internet connection and reload.');
-    const url='https://raw.githubusercontent.com/Rajdeep2013/Allen-8-All-subjects-DPPs/main/DPP_Daily_Practice_Pack.zip';
-    const response=await fetch(url,{cache:'no-store'});
-    if(!response.ok) throw new Error('Could not retrieve the practice pack (HTTP '+response.status+').');
-    const zip=await JSZip.loadAsync(await response.arrayBuffer());
-    const app=zip.file('dpp_practice_app.html');
-    if(!app) throw new Error('The practice app file was not found inside the uploaded ZIP.');
-    const html=await app.async('string');
-    document.open();document.write(html);document.close();
-  }catch(e){
-    track.style.display='none';error.style.display='block';error.textContent=e.message;
-    status.textContent='The practice app could not be started.';
-  }
+ const status=document.getElementById('status'),track=document.getElementById('track'),error=document.getElementById('error');
+ try{
+  if(!window.JSZip)throw new Error('The ZIP reader could not load. Check your internet connection and reload.');
+  const response=await fetch('https://raw.githubusercontent.com/Rajdeep2013/Allen-8-All-subjects-DPPs/main/DPP_Daily_Practice_Pack.zip',{cache:'no-store'});
+  if(!response.ok)throw new Error('Could not retrieve the practice pack (HTTP '+response.status+').');
+  const zip=await JSZip.loadAsync(await response.arrayBuffer()),file=zip.file('dpp_practice_app.html');
+  if(!file)throw new Error('The practice app was not found inside the ZIP.');
+  let html=await file.async('string');
+  const darkCSS=`
+:root{color-scheme:dark;--bg:#090d18;--card:#111827;--ink:#edf2ff;--muted:#9aa8bf;--line:#273449;--accent:#818cf8;--accent-soft:#25294a;--ok:#34d399;--ok-soft:#12352f;--bad:#fb7185;--bad-soft:#3a202b;--phys:#60a5fa;--chem:#34d399;--math:#fbbf24;--bio:#f472b6}
+body{background:var(--bg)!important;color:var(--ink)!important}header,.card{background:var(--card)!important;border-color:var(--line)!important}
+.btn,.day,.opt{background:#0b1220!important;color:var(--ink)!important;border-color:var(--line)!important}
+.btn.primary{background:#4f46e5!important;color:#fff!important}.btn:hover,.opt:hover:not([disabled]){background:#1b2940!important}
+.tag,kbd,.opt .k{background:#253247!important;color:#d5deed!important}.bar{background:#263449!important}
+.days .day.done{background:#12352f!important;color:#6ee7b7!important}.days .day.part{background:#392f19!important;color:#fcd34d!important}
+.expl{background:#25294a!important;color:#edf2ff!important}.warn{background:#392f19!important;color:#fde68a!important;border-color:#6b5524!important}
+input{background:#0b1220!important;color:#edf2ff!important;border-color:#273449!important}
+`;
+  html=html.replace('</head>','<style>'+darkCSS+'</style></head>');
+  html=html.replace('<div class="grid" id="stats"></div>','<div class="grid" id="stats"></div><div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><div><h2>Daily activity record</h2><div class="sub">Practice history saved on this browser</div></div><button class="btn" id="export-history">Export CSV</button></div><div id="daily-history" style="margin-top:12px"></div></div>');
+  html=html.replace("const LS_IMPORT   = 'dpp_imported_v1';","const LS_IMPORT   = 'dpp_imported_v1';\nconst LS_DAILY = 'dpp_daily_history_v1';");
+  html=html.replace("let imported = loadJSON(LS_IMPORT, []);       // array of questions added by user","let imported = loadJSON(LS_IMPORT, []);       // array of questions added by user\nlet dailyHistory = loadJSON(LS_DAILY, {});");
+  const historyFns=`
+function renderDailyHistory(){
+ const host=document.getElementById('daily-history');if(!host)return;
+ const entries=Object.entries(dailyHistory).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,30);
+ if(!entries.length){host.innerHTML='<div class="empty">No practice recorded yet. Answer questions and your daily history will appear here.</div>';return;}
+ host.innerHTML='';
+ entries.forEach(([date,r])=>{
+  const pct=r.attempts?Math.round(100*r.correct/r.attempts):0;
+  const breakdown=['Physics','Chemistry','Maths','Biology'].map(s=>s+': '+((r.subjects&&r.subjects[s])||0)).join(' · ');
+  const row=document.createElement('div');row.className='row';row.style.cssText='justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);gap:8px';
+  const left=document.createElement('div'),right=document.createElement('div');left.innerHTML='<b>'+date+'</b><div class="sub"></div>';left.querySelector('.sub').textContent=breakdown;
+  right.style.textAlign='right';right.innerHTML='<b></b><div class="sub"></div>';right.querySelector('b').textContent=r.correct+'/'+r.attempts+' correct';right.querySelector('.sub').textContent=pct+'% accuracy';
+  row.append(left,right);host.appendChild(row);
+ });
+}
+function recordDailyAnswer(q,ok){
+ const d=new Date(),key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ const r=dailyHistory[key]||{attempts:0,correct:0,subjects:{}};
+ r.attempts++;if(ok)r.correct++;r.subjects[q.subject]=(r.subjects[q.subject]||0)+1;
+ dailyHistory[key]=r;saveJSON(LS_DAILY,dailyHistory);
+}
+function exportDailyHistory(){
+ const rows=[['Date','Answered','Correct','Accuracy','Physics','Chemistry','Maths','Biology']];
+ Object.entries(dailyHistory).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([date,r])=>rows.push([date,r.attempts,r.correct,(r.attempts?Math.round(100*r.correct/r.attempts):0)+'%',...['Physics','Chemistry','Maths','Biology'].map(s=>(r.subjects&&r.subjects[s])||0)]));
+ const csv=rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\\n');
+ const a=document.createElement('a'),url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.href=url;a.download='dpp-daily-practice-history.csv';a.click();URL.revokeObjectURL(url);
+}
+`;
+  html=html.replace('function renderHome(){',historyFns+'\nfunction renderHome(){');
+  html=html.replace("  const sp = document.getElementById('subject-progress');","  renderDailyHistory();\n  const sp = document.getElementById('subject-progress');");
+  html=html.replace("  progress[q.id]=p; saveJSON(LS_PROGRESS,progress);","  progress[q.id]=p; saveJSON(LS_PROGRESS,progress);\n  recordDailyAnswer(q,ok);");
+  html=html.replace("document.getElementById('reset-progress').onclick=()=>{","document.getElementById('export-history').onclick=exportDailyHistory;\ndocument.getElementById('reset-progress').onclick=()=>{");
+  html=html.replace("if(confirm('Reset all progress stored in this browser?')){ progress={}; saveJSON(LS_PROGRESS,progress); renderBank(); renderHome(); }","if(confirm('Reset all progress and daily history stored in this browser?')){ progress={}; dailyHistory={}; saveJSON(LS_PROGRESS,progress); saveJSON(LS_DAILY,dailyHistory); renderBank(); renderHome(); }");
+  if(!html.includes('function recordDailyAnswer(q,ok)')||!html.includes('id="daily-history"'))throw new Error('Could not apply the daily history patch safely.');
+  document.open();document.write(html);document.close();
+ }catch(e){track.style.display='none';error.style.display='block';error.textContent=e.message;status.textContent='The practice app could not be started.';}
 })();
 </script>
-</body>
-</html>
+</body></html>
