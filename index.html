@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#4f46e5">
+  <title>Allen Class 8 · DPP Daily Practice</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#f5f6fa;color:#1d2433;font:16px system-ui,-apple-system,"Segoe UI",sans-serif}
+    main{width:min(560px,100%);padding:30px;border:1px solid #e4e7ec;border-radius:18px;background:white;box-shadow:0 12px 40px #1d243310}
+    h1{margin:0 0 8px;font-size:24px}p{color:#667085;line-height:1.55}.track{height:8px;border-radius:99px;background:#eef0f4;overflow:hidden;margin:22px 0}.track span{display:block;width:35%;height:100%;background:#4f46e5;animation:load 1.2s ease-in-out infinite alternate}@keyframes load{to{width:85%}}
+    .error{color:#b42318;background:#fef3f2;border-radius:10px;padding:12px;display:none}a{color:#4f46e5}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Allen Class 8 · DPP Daily Practice</h1>
+  <p id="status">Loading your daily practice app…</p>
+  <div class="track" id="track"><span></span></div>
+  <p class="error" id="error"></p>
+  <noscript>This practice app requires JavaScript. Enable JavaScript and reload this page.</noscript>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+(async()=>{
+  const status=document.getElementById('status'), track=document.getElementById('track'), error=document.getElementById('error');
+  try{
+    if(!window.JSZip) throw new Error('The ZIP reader could not load. Check your internet connection and reload.');
+    const url='https://raw.githubusercontent.com/Rajdeep2013/Allen-8-All-subjects-DPPs/main/DPP_Daily_Practice_Pack.zip';
+    const response=await fetch(url,{cache:'no-store'});
+    if(!response.ok) throw new Error('Could not retrieve the practice pack (HTTP '+response.status+').');
+    const zip=await JSZip.loadAsync(await response.arrayBuffer());
+    const app=zip.file('dpp_practice_app.html');
+    if(!app) throw new Error('The practice app file was not found inside the uploaded ZIP.');
+    const html=await app.async('string');
+    document.open();document.write(html);document.close();
+  }catch(e){
+    track.style.display='none';error.style.display='block';error.textContent=e.message;
+    status.textContent='The practice app could not be started.';
+  }
+})();
+</script>
+</body>
+</html>
