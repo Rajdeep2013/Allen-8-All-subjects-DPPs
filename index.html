@@ -71,7 +71,7 @@ function exportDailyHistory(){
   html=html.replace("document.getElementById('reset-progress').onclick=()=>{","document.getElementById('export-history').onclick=exportDailyHistory;\ndocument.getElementById('reset-progress').onclick=()=>{");
   html=html.replace("if(confirm('Reset all progress stored in this browser?')){ progress={}; saveJSON(LS_PROGRESS,progress); renderBank(); renderHome(); }","if(confirm('Reset all progress and daily history stored in this browser?')){ progress={}; dailyHistory={}; saveJSON(LS_PROGRESS,progress); saveJSON(LS_DAILY,dailyHistory); renderBank(); renderHome(); }");
 
-  const chapterSchedulePatch = String.raw\`
+  const chapterSchedulePatch = String.raw`
 const COMPLETED_CHAPTERS = [
  {name:'Tissue',subject:'Biology',match:/Tissue/i},
  {name:'Carbon and Its Compounds',subject:'Chemistry',match:/Carbon_And_Its_Compounds/i},
@@ -122,7 +122,7 @@ function setForDay(day){
  const p=dayInfo(day);if(p)out[p.subject]=p.items;
  return out;
 }
-\`;
+`;
   const scheduleStart = html.indexOf('function bank(){');
   const scheduleEnd = html.indexOf('function isAnswered(id){', scheduleStart);
   if(scheduleStart<0||scheduleEnd<0)throw new Error('Could not locate the question scheduling code.');
@@ -140,7 +140,7 @@ function setForDay(day){
    '<div id="daily-history" style="margin-top:12px"></div></div>',
    '<div id="daily-history" style="margin-top:12px"></div></div><div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><div><h2>Backlog</h2><div class="sub">Unanswered questions from previous days</div></div><span class="tag" id="backlog-total">0 pending</span></div><div id="backlog-content" class="grid" style="margin-top:12px"></div></div>'
   );
-  const backlogFns = String.raw\`
+  const backlogFns = String.raw`
 function backlogGroups(){
  const groups=new Map();
  for(let d=1;d<currentDay();d++){
@@ -172,10 +172,10 @@ function renderBacklog(){
   host.appendChild(card);
  });
 }
-\`;
-  html=html.replace('function renderHome(){',backlogFns+'\\nfunction renderHome(){');
-  html=html.replace('  renderDailyHistory();','  renderDailyHistory();\\n  renderBacklog();');
-  const dateBasedCurrentDay = String.raw\`const LS_SCHEDULE_START='dpp_schedule_start_v1';
+`;
+  html=html.replace('function renderHome(){',backlogFns+'\nfunction renderHome(){');
+  html=html.replace('  renderDailyHistory();','  renderDailyHistory();\n  renderBacklog();');
+  const dateBasedCurrentDay = String.raw`const LS_SCHEDULE_START='dpp_schedule_start_v1';
 function scheduleDateKey(d){
  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
@@ -190,8 +190,8 @@ function currentDay(){
  start.setHours(0,0,0,0);today.setHours(0,0,0,0);
  const elapsed=Math.floor((today-start)/86400000);
  return Math.min(Math.max(elapsed+1,1),numDays());
-}\`;
-  html=html.replace(/function currentDay\\(\\)\\{[\\s\\S]*?\\n\\}/,dateBasedCurrentDay);
+}`;
+  html=html.replace(/function currentDay\(\)\{[\s\S]*?\n\}/,dateBasedCurrentDay);
   if(!html.includes('function renderBacklog()')||!html.includes('dpp_schedule_start_v1')||!html.includes('function backlogGroups()'))throw new Error('Backlog patch validation failed.');
 
   if(!html.includes('function recordDailyAnswer(q,ok)')||!html.includes('id="daily-history"'))throw new Error('Could not apply the daily history patch safely.');
