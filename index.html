@@ -70,6 +70,71 @@ function exportDailyHistory(){
   html=html.replace("  progress[q.id]=p; saveJSON(LS_PROGRESS,progress);","  progress[q.id]=p; saveJSON(LS_PROGRESS,progress);\n  recordDailyAnswer(q,ok);");
   html=html.replace("document.getElementById('reset-progress').onclick=()=>{","document.getElementById('export-history').onclick=exportDailyHistory;\ndocument.getElementById('reset-progress').onclick=()=>{");
   html=html.replace("if(confirm('Reset all progress stored in this browser?')){ progress={}; saveJSON(LS_PROGRESS,progress); renderBank(); renderHome(); }","if(confirm('Reset all progress and daily history stored in this browser?')){ progress={}; dailyHistory={}; saveJSON(LS_PROGRESS,progress); saveJSON(LS_DAILY,dailyHistory); renderBank(); renderHome(); }");
+
+  const chapterSchedulePatch = String.raw\`
+const COMPLETED_CHAPTERS = [
+ {name:'Tissue',subject:'Biology',match:/Tissue/i},
+ {name:'Carbon and Its Compounds',subject:'Chemistry',match:/Carbon_And_Its_Compounds/i},
+ {name:'Number System',subject:'Maths',match:/Number_System/i},
+ {name:'Circles',subject:'Maths',match:/Circles/i},
+ {name:'Coordinate Geometry',subject:'Maths',match:/Coordinate_Geometry/i},
+ {name:'Force and Laws of Motion',subject:'Physics',match:/Force_And_Laws_Of_Motion/i},
+ {name:'Gravitation',subject:'Physics',match:/Gravitation/i},
+ {name:'Motion',subject:'Physics',match:/(^|[^A-Za-z])Motion([^A-Za-z]|$)/i}
+];
+function chapterFor(q){
+ const source=(q.source||'')+' '+(q.id||'');
+ const found=COMPLETED_CHAPTERS.find(c=>c.subject===q.subject&&c.match.test(source));
+ return found?found.name:null;
+}
+function bank(){
+ const map=new Map();
+ [...DEFAULT_BANK,...imported].forEach(q=>{
+  if(!validQ(q))return;
+  const chapter=chapterFor(q);
+  if(chapter)map.set(q.id,{...q,topic:chapter});
+ });
+ return [...map.values()];
+}
+function poolFor(subject){
+ return bank().filter(q=>q.subject===subject)
+  .sort((a,b)=>(a.source||'').localeCompare(b.source||'')||a.dpp-b.dpp||a.qno-b.qno);
+}
+function chapterPools(){
+ return COMPLETED_CHAPTERS.map(c=>({
+  chapter:c.name,subject:c.subject,
+  items:bank().filter(q=>q.topic===c.name)
+   .sort((a,b)=>(a.source||'').localeCompare(b.source||'')||a.dpp-b.dpp||a.qno-b.qno)
+ })).filter(c=>c.items.length);
+}
+function dayPlan(){
+ const plan=[];
+ chapterPools().forEach(c=>{
+  for(let i=0;i<c.items.length;i+=PER_SUBJECT)
+   plan.push({chapter:c.chapter,subject:c.subject,items:c.items.slice(i,i+PER_SUBJECT)});
+ });
+ return plan;
+}
+function numDays(){return Math.max(dayPlan().length,1);}
+function dayInfo(day){return dayPlan()[day-1]||null;}
+function setForDay(day){
+ const out={};SUBJECTS.forEach(s=>out[s]=[]);
+ const p=dayInfo(day);if(p)out[p.subject]=p.items;
+ return out;
+}
+\`;
+  const scheduleStart = html.indexOf('function bank(){');
+  const scheduleEnd = html.indexOf('function isAnswered(id){', scheduleStart);
+  if(scheduleStart<0||scheduleEnd<0)throw new Error('Could not locate the question scheduling code.');
+  html=html.slice(0,scheduleStart)+chapterSchedulePatch+'\\n'+html.slice(scheduleEnd);
+  html=html.replace('5 questions per subject, every day','Up to 5 questions from one completed chapter each day');
+  html=html.replace('Each day takes the next 5 unseen questions from every subject. Tap a day to see its set.','Each day contains questions from exactly one completed chapter. Up to 5 questions are scheduled per day.');
+  html=html.replace("count+' questions today ('+PER_SUBJECT+' per subject where available)'","count+' questions from '+((dayInfo(day)||{}).chapter||'one chapter')+' only'");
+  html=html.replace("'Day '+day+' of '+numDays()","'Day '+day+' · '+((dayInfo(day)||{}).chapter||'No chapter')");
+  html=html.replace("'Day '+day+' of '+n","'Day '+day+' · '+((dayInfo(day)||{}).chapter||'No chapter')");
+  html=html.replace("b.length+' questions. '+per+'. Days available: '+numDays()+'.'","b.length+' eligible questions from completed chapters only. '+per+'. One chapter per day; days available: '+numDays()+'.'");
+  if(!html.includes('function chapterPools()')||!html.includes('exactly one completed chapter'))throw new Error('Chapter-only schedule patch validation failed.');
+
   if(!html.includes('function recordDailyAnswer(q,ok)')||!html.includes('id="daily-history"'))throw new Error('Could not apply the daily history patch safely.');
   document.open();document.write(html);document.close();
  }catch(e){track.style.display='none';error.style.display='block';error.textContent=e.message;status.textContent='The practice app could not be started.';}
