@@ -126,7 +126,7 @@ function setForDay(day){
   const scheduleStart = html.indexOf('function bank(){');
   const scheduleEnd = html.indexOf('function isAnswered(id){', scheduleStart);
   if(scheduleStart<0||scheduleEnd<0)throw new Error('Could not locate the question scheduling code.');
-  html=html.slice(0,scheduleStart)+chapterSchedulePatch+'\\n'+html.slice(scheduleEnd);
+  html=html.slice(0,scheduleStart)+chapterSchedulePatch+'\n'+html.slice(scheduleEnd);
   html=html.replace('5 questions per subject, every day','Up to 5 questions from one completed chapter each day');
   html=html.replace('Each day takes the next 5 unseen questions from every subject. Tap a day to see its set.','Each day contains questions from exactly one completed chapter. Up to 5 questions are scheduled per day.');
   html=html.replace("count+' questions today ('+PER_SUBJECT+' per subject where available)'","count+' questions from '+((dayInfo(day)||{}).chapter||'one chapter')+' only'");
