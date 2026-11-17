@@ -135,6 +135,65 @@ function setForDay(day){
   html=html.replace("b.length+' questions. '+per+'. Days available: '+numDays()+'.'","b.length+' eligible questions from completed chapters only. '+per+'. One chapter per day; days available: '+numDays()+'.'");
   if(!html.includes('function chapterPools()')||!html.includes('exactly one completed chapter'))throw new Error('Chapter-only schedule patch validation failed.');
 
+
+  html=html.replace(
+   '<div id="daily-history" style="margin-top:12px"></div></div>',
+   '<div id="daily-history" style="margin-top:12px"></div></div><div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><div><h2>Backlog</h2><div class="sub">Unanswered questions from previous days</div></div><span class="tag" id="backlog-total">0 pending</span></div><div id="backlog-content" class="grid" style="margin-top:12px"></div></div>'
+  );
+  const backlogFns = String.raw\`
+function backlogGroups(){
+ const groups=new Map();
+ for(let d=1;d<currentDay();d++){
+  const p=dayInfo(d);if(!p)continue;
+  const pending=p.items.filter(q=>!isAnswered(q.id));
+  if(!pending.length)continue;
+  const key=p.chapter;
+  if(!groups.has(key))groups.set(key,{chapter:p.chapter,subject:p.subject,items:[]});
+  groups.get(key).items.push(...pending);
+ }
+ return [...groups.values()];
+}
+function renderBacklog(){
+ const host=document.getElementById('backlog-content'),total=document.getElementById('backlog-total');
+ if(!host||!total)return;
+ const groups=backlogGroups(),count=groups.reduce((n,g)=>n+g.items.length,0);
+ total.textContent=count+' pending';
+ host.innerHTML='';
+ if(!count){host.appendChild(el('div',{class:'empty',text:'No backlog. Previous daily sets are complete.'}));return;}
+ groups.forEach(g=>{
+  const card=el('div',{class:'card'},[
+   el('div',{class:'row',style:'justify-content:space-between'},[
+    el('div',{class:'row'},[subjectDot(g.subject),el('b',{text:g.chapter})]),
+    el('span',{class:'tag',text:g.items.length+' pending'})
+   ]),
+   el('div',{class:'sub',style:'margin:8px 0 12px',text:'Unanswered questions from earlier daily sets.'}),
+   el('button',{class:'btn primary',onclick:()=>startSession(g.items,'Backlog · '+g.chapter)},'Practice backlog')
+  ]);
+  host.appendChild(card);
+ });
+}
+\`;
+  html=html.replace('function renderHome(){',backlogFns+'\\nfunction renderHome(){');
+  html=html.replace('  renderDailyHistory();','  renderDailyHistory();\\n  renderBacklog();');
+  const dateBasedCurrentDay = String.raw\`const LS_SCHEDULE_START='dpp_schedule_start_v1';
+function scheduleDateKey(d){
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function scheduleStartDate(){
+ let key=localStorage.getItem(LS_SCHEDULE_START);
+ if(!key){key=scheduleDateKey(new Date());try{localStorage.setItem(LS_SCHEDULE_START,key);}catch(e){}}
+ const parts=key.split('-').map(Number);
+ return new Date(parts[0],parts[1]-1,parts[2]);
+}
+function currentDay(){
+ const start=scheduleStartDate(),today=new Date();
+ start.setHours(0,0,0,0);today.setHours(0,0,0,0);
+ const elapsed=Math.floor((today-start)/86400000);
+ return Math.min(Math.max(elapsed+1,1),numDays());
+}\`;
+  html=html.replace(/function currentDay\\(\\)\\{[\\s\\S]*?\\n\\}/,dateBasedCurrentDay);
+  if(!html.includes('function renderBacklog()')||!html.includes('dpp_schedule_start_v1')||!html.includes('function backlogGroups()'))throw new Error('Backlog patch validation failed.');
+
   if(!html.includes('function recordDailyAnswer(q,ok)')||!html.includes('id="daily-history"'))throw new Error('Could not apply the daily history patch safely.');
   document.open();document.write(html);document.close();
  }catch(e){track.style.display='none';error.style.display='block';error.textContent=e.message;status.textContent='The practice app could not be started.';}
