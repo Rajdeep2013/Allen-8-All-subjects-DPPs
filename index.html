@@ -189,7 +189,7 @@ function currentDay(){
  const start=scheduleStartDate(),today=new Date();
  start.setHours(0,0,0,0);today.setHours(0,0,0,0);
  const elapsed=Math.floor((today-start)/86400000);
- return Math.min(Math.max(elapsed+1,1),numDays());
+ return Math.max(elapsed+1,1);
 }`;
   html=html.replace(/function currentDay\(\)\{[\s\S]*?\n\}/,dateBasedCurrentDay);
   if(!html.includes('function renderBacklog()')||!html.includes('dpp_schedule_start_v1')||!html.includes('function backlogGroups()'))throw new Error('Backlog patch validation failed.');
